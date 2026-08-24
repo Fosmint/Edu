@@ -2,6 +2,8 @@ import { useEffect, useRef } from "react";
 import { View, Text, StyleSheet, Animated } from "react-native";
 import { useProfileStore } from "../stores/useProfileStore";
 import { colors, spacing, radius } from "./theme";
+import { Icon } from "./icons/Icon";
+import { resolveIconName } from "./icons/iconMap";
 
 export function AchievementToast() {
   const newlyUnlocked = useProfileStore((s) => s.newlyUnlockedAchievements);
@@ -24,7 +26,9 @@ export function AchievementToast() {
 
   return (
     <Animated.View style={[styles.container, { opacity }]} pointerEvents="none">
-      <Text style={styles.icon}>{first.icon}</Text>
+      <View style={styles.iconWrap}>
+        <Icon name={resolveIconName(first.icon)} size={26} color={colors.textPrimary} />
+      </View>
       <View>
         <Text style={styles.label}>Новое достижение</Text>
         <Text style={styles.title}>{first.title}</Text>
@@ -50,7 +54,14 @@ const styles = StyleSheet.create({
     zIndex: 999,
     elevation: 10,
   },
-  icon: { fontSize: 32 },
+  iconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.full,
+    backgroundColor: colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   label: { color: colors.textMuted, fontSize: 11, textTransform: "uppercase" },
   title: { color: colors.textPrimary, fontSize: 16, fontWeight: "700" },
 });

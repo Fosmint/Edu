@@ -14,6 +14,7 @@ import {
 import { resetDatabase } from "../../lib/db/client";
 import { Card } from "../../components/Card";
 import { colors, spacing, radius } from "../../components/theme";
+import { Icon } from "../../components/icons/Icon";
 
 const DEFAULT_OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 
@@ -129,14 +130,21 @@ export default function SettingsScreen() {
           autoCorrect={false}
         />
         <Pressable style={styles.saveButton} onPress={handleSaveKey}>
-          <Text style={styles.saveButtonText}>{status === "saved" ? "Сохранено ✓" : "Сохранить ключ"}</Text>
+          {status === "saved" ? (
+            <View style={styles.saveButtonRow}>
+              <Icon name="check" size={15} color={colors.background} />
+              <Text style={styles.saveButtonText}>Сохранено</Text>
+            </View>
+          ) : (
+            <Text style={styles.saveButtonText}>Сохранить ключ</Text>
+          )}
         </Pressable>
       </Card>
 
       <Card style={styles.card}>
         <Pressable style={styles.advancedToggle} onPress={() => setShowAdvanced((v) => !v)}>
           <Text style={styles.sectionTitle}>Своя модель / провайдер</Text>
-          <Text style={styles.advancedToggleIcon}>{showAdvanced ? "▲" : "▼"}</Text>
+          <Icon name={showAdvanced ? "chevron-up" : "chevron-down"} size={16} color={colors.textMuted} />
         </Pressable>
 
         {!showAdvanced && (savedModel || savedBaseUrl) && (
@@ -182,9 +190,14 @@ export default function SettingsScreen() {
                 <Text style={styles.resetLinkText}>Сбросить к OpenRouter</Text>
               </Pressable>
               <Pressable style={styles.saveButtonSmall} onPress={handleSaveAdvanced}>
-                <Text style={styles.saveButtonText}>
-                  {advancedStatus === "saved" ? "Сохранено ✓" : "Сохранить"}
-                </Text>
+                {advancedStatus === "saved" ? (
+                  <View style={styles.saveButtonRow}>
+                    <Icon name="check" size={15} color={colors.background} />
+                    <Text style={styles.saveButtonText}>Сохранено</Text>
+                  </View>
+                ) : (
+                  <Text style={styles.saveButtonText}>Сохранить</Text>
+                )}
               </Pressable>
             </View>
           </>
@@ -235,8 +248,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   saveButtonText: { color: colors.background, fontWeight: "700" },
+  saveButtonRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   advancedToggle: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  advancedToggleIcon: { color: colors.textMuted, fontSize: 12 },
   advancedActionsRow: {
     flexDirection: "row",
     justifyContent: "space-between",

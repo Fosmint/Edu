@@ -8,6 +8,8 @@ import { getTopicsDueForReview } from "../../lib/srs/sm2";
 import { Card } from "../../components/Card";
 import { ProgressBar } from "../../components/ProgressBar";
 import { colors, spacing, radius } from "../../components/theme";
+import { Icon } from "../../components/icons/Icon";
+import { resolveIconName } from "../../components/icons/iconMap";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -32,9 +34,13 @@ export default function HomeScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
-        <Text style={styles.greeting}>Привет, {profile.name} 👋</Text>
+        <View style={styles.greetingRow}>
+          <Text style={styles.greeting}>Привет, {profile.name}</Text>
+          <Icon name="wave" size={22} color={colors.textPrimary} />
+        </View>
         <View style={styles.streakBadge}>
-          <Text style={styles.streakText}>🔥 {profile.streak_days}</Text>
+          <Icon name="flame" size={15} color={colors.textPrimary} />
+          <Text style={styles.streakText}>{profile.streak_days}</Text>
         </View>
       </View>
 
@@ -49,12 +55,16 @@ export default function HomeScreen() {
       </Card>
 
       <Pressable style={styles.addTopicButton} onPress={() => router.push("/add-topic")}>
-        <Text style={styles.addTopicButtonText}>✏️ Что сейчас проходим в школе?</Text>
+        <Icon name="pencil" size={17} color={colors.background} />
+        <Text style={styles.addTopicButtonText}>Что сейчас проходим в школе?</Text>
       </Pressable>
 
       {dueForReview.length > 0 && (
         <Card style={styles.reviewCard}>
-          <Text style={styles.reviewTitle}>📌 Пора повторить</Text>
+          <View style={styles.sectionTitleRow}>
+            <Icon name="pin" size={16} color={colors.textPrimary} />
+            <Text style={styles.reviewTitle}>Пора повторить</Text>
+          </View>
           <Text style={styles.reviewSubtitle}>
             {dueForReview.length} {pluralizeTopics(dueForReview.length)} ждут повторения
           </Text>
@@ -66,7 +76,10 @@ export default function HomeScreen() {
 
       {weakestSubject && (
         <Card>
-          <Text style={styles.sectionTitle}>💡 Рекомендация на сегодня</Text>
+          <View style={styles.sectionTitleRow}>
+            <Icon name="lightbulb" size={16} color={colors.textPrimary} />
+            <Text style={styles.sectionTitle}>Рекомендация на сегодня</Text>
+          </View>
           <Text style={styles.recommendationText}>
             Твой прогресс по предмету «{weakestSubject.name}» пока ниже остальных —{" "}
             {Math.round(weakestSubject.overall_progress_pct)}%. Стоит уделить ему немного времени.
@@ -75,8 +88,9 @@ export default function HomeScreen() {
             style={styles.recommendationButton}
             onPress={() => router.push(`/subject/${weakestSubject.id}`)}
           >
+            <Icon name={resolveIconName(weakestSubject.icon)} size={16} color={colors.textPrimary} />
             <Text style={styles.recommendationButtonText}>
-              {weakestSubject.icon} Заняться {weakestSubject.name.toLowerCase()}
+              Заняться {weakestSubject.name.toLowerCase()}
             </Text>
           </Pressable>
         </Card>
@@ -86,9 +100,10 @@ export default function HomeScreen() {
       {subjects.map((s) => (
         <Card key={s.id} style={styles.subjectRow} onPress={() => router.push(`/subject/${s.id}`)}>
           <View style={styles.subjectRowTop}>
-            <Text style={styles.subjectName}>
-              {s.icon} {s.name}
-            </Text>
+            <View style={styles.subjectNameRow}>
+              <Icon name={resolveIconName(s.icon)} size={17} color={colors.textPrimary} />
+              <Text style={styles.subjectName}>{s.name}</Text>
+            </View>
             <Text style={styles.subjectPercent}>{Math.round(s.overall_progress_pct)}%</Text>
           </View>
           <ProgressBar percent={s.overall_progress_pct} />
@@ -96,7 +111,8 @@ export default function HomeScreen() {
       ))}
 
       <Pressable style={styles.boredButton} onPress={() => router.push("/(tabs)/subjects")}>
-        <Text style={styles.boredButtonText}>🎲 Мне скучно</Text>
+        <Icon name="dice" size={18} color={colors.textPrimary} />
+        <Text style={styles.boredButtonText}>Мне скучно</Text>
       </Pressable>
 
       <Pressable style={styles.cheatButton} onPress={() => router.push("/cheat-mode")}>
@@ -122,8 +138,12 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.md, gap: spacing.md, paddingBottom: spacing.xl },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  greetingRow: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
   greeting: { color: colors.textPrimary, fontSize: 22, fontWeight: "700" },
   streakBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
     backgroundColor: colors.surfaceElevated,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
@@ -135,6 +155,7 @@ const styles = StyleSheet.create({
   levelLabel: { color: colors.textPrimary, fontSize: 16, fontWeight: "600" },
   xpLabel: { color: colors.textSecondary, fontSize: 14 },
   reviewCard: { gap: spacing.xs },
+  sectionTitleRow: { flexDirection: "row", alignItems: "center", gap: spacing.xs, marginTop: spacing.sm },
   reviewTitle: { color: colors.textPrimary, fontSize: 16, fontWeight: "600" },
   reviewSubtitle: { color: colors.textSecondary, fontSize: 14 },
   reviewButton: {
@@ -149,7 +170,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.textPrimary,
     borderRadius: radius.md,
     paddingVertical: spacing.md,
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.xs,
   },
   addTopicButtonText: { color: colors.background, fontSize: 15, fontWeight: "700" },
   sectionTitle: { color: colors.textPrimary, fontSize: 16, fontWeight: "700", marginTop: spacing.sm },
@@ -159,13 +183,17 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceElevated,
     borderRadius: radius.sm,
     paddingVertical: spacing.sm,
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.xs,
     borderWidth: 1,
     borderColor: colors.border,
   },
   recommendationButtonText: { color: colors.textPrimary, fontWeight: "600" },
   subjectRow: { gap: spacing.xs },
-  subjectRowTop: { flexDirection: "row", justifyContent: "space-between" },
+  subjectRowTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  subjectNameRow: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
   subjectName: { color: colors.textPrimary, fontSize: 15, fontWeight: "600" },
   subjectPercent: { color: colors.textSecondary, fontSize: 14 },
   boredButton: {
@@ -173,7 +201,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceElevated,
     borderRadius: radius.md,
     paddingVertical: spacing.md,
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.xs,
     borderWidth: 1,
     borderColor: colors.border,
   },

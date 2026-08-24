@@ -63,7 +63,7 @@ export async function requestSimplerExplanation(params: {
   return sendMessageToTeacher({
     ...params,
     sessionType: "chat",
-    userMessage: `🤯 Я ничего не понял.
+    userMessage: `Я ничего не понял.
 
 Пользователь нажал кнопку «Я ничего не понял».
 

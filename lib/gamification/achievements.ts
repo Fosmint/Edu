@@ -3,6 +3,7 @@ import { getDb } from "../db/client";
 export interface AchievementDef {
   code: string;
   title: string;
+  /** Семантический ключ иконки (см. components/icons/iconMap.ts), не emoji. */
   icon: string;
   description: string;
   /** Проверяет, выполнено ли условие. Возвращает true, если достижение нужно разблокировать сейчас. */
@@ -18,7 +19,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   {
     code: "first_topic_started",
     title: "Первый шаг",
-    icon: "🏁",
+    icon: "flag",
     description: "Начал заниматься первой темой",
     check: (db) => {
       const row = db.getFirstSync<{ count: number }>(`SELECT COUNT(*) as count FROM sessions`);
@@ -28,7 +29,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   {
     code: "first_topic_mastered",
     title: "Первая победа",
-    icon: "🏆",
+    icon: "trophy",
     description: "Полностью освоил первую тему",
     check: (db) => {
       const row = db.getFirstSync<{ count: number }>(
@@ -40,7 +41,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   {
     code: "topics_mastered_5",
     title: "Пять тем позади",
-    icon: "📚",
+    icon: "books",
     description: "Освоил 5 тем",
     check: (db) => {
       const row = db.getFirstSync<{ count: number }>(
@@ -52,7 +53,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   {
     code: "problems_solved_100",
     title: "Сотня задач",
-    icon: "🧮",
+    icon: "calculator",
     description: "Решил 100 задач в практике",
     check: (db) => {
       const row = db.getFirstSync<{ total: number }>(
@@ -64,7 +65,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   {
     code: "streak_correct_10",
     title: "Без единой ошибки",
-    icon: "⚡",
+    icon: "bolt",
     description: "10 правильных ответов подряд в одной сессии практики",
     check: (db) => {
       // Проверяем последнюю завершённую сессию практики: score выше 0.9 при >= 10 вопросах — прокси для "почти без ошибок подряд"
@@ -77,7 +78,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   {
     code: "streak_days_7",
     title: "Неделя подряд",
-    icon: "🔥",
+    icon: "flame",
     description: "7 дней обучения подряд",
     check: (db) => {
       const row = db.getFirstSync<{ streak_days: number }>(`SELECT streak_days FROM profile WHERE id = 1`);
@@ -87,7 +88,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   {
     code: "streak_days_30",
     title: "Месяц дисциплины",
-    icon: "🔥",
+    icon: "flame",
     description: "30 дней обучения подряд",
     check: (db) => {
       const row = db.getFirstSync<{ streak_days: number }>(`SELECT streak_days FROM profile WHERE id = 1`);
@@ -97,7 +98,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   {
     code: "boss_defeated_1",
     title: "Первый босс повержен",
-    icon: "⚔️",
+    icon: "sword",
     description: "Победил первого босса темы",
     check: (db) => {
       const row = db.getFirstSync<{ count: number }>(
@@ -109,7 +110,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   {
     code: "boss_defeated_5",
     title: "Охотник за боссами",
-    icon: "💀",
+    icon: "skull",
     description: "Победил 5 боссов тем",
     check: (db) => {
       const row = db.getFirstSync<{ count: number }>(
@@ -121,7 +122,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   {
     code: "all_subjects_touched",
     title: "Многостаночник",
-    icon: "🎯",
+    icon: "target",
     description: "Позанимался всеми 5 предметами хотя бы раз",
     check: (db) => {
       const row = db.getFirstSync<{ count: number }>(
@@ -136,7 +137,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   {
     code: "custom_topic_added",
     title: "Своя программа",
-    icon: "✏️",
+    icon: "pencil",
     description: "Добавил свою тему из школьной программы",
     check: (db) => {
       const row = db.getFirstSync<{ count: number }>(
@@ -148,7 +149,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   {
     code: "level_5",
     title: "Пятый уровень",
-    icon: "⭐",
+    icon: "star",
     description: "Достиг 5 уровня",
     check: (db) => {
       const row = db.getFirstSync<{ level: number }>(`SELECT level FROM profile WHERE id = 1`);
@@ -158,7 +159,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   {
     code: "level_10",
     title: "Десятый уровень",
-    icon: "🌟",
+    icon: "sparkle-star",
     description: "Достиг 10 уровня",
     check: (db) => {
       const row = db.getFirstSync<{ level: number }>(`SELECT level FROM profile WHERE id = 1`);

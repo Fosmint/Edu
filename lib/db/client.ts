@@ -40,7 +40,7 @@ export async function initDatabase(): Promise<void> {
   // INSERT OR IGNORE, а не привязка к "первому запуску" — иначе у пользователей,
   // уже имеющих БД, эта запись никогда бы не появилась.
   db.runSync(
-    `INSERT OR IGNORE INTO subjects (id, name, icon, sort_order, is_hidden) VALUES ('cheat_mode', 'Срочно списать', '🆘', 999, 1)`
+    `INSERT OR IGNORE INTO subjects (id, name, icon, sort_order, is_hidden) VALUES ('cheat_mode', 'Срочно списать', 'sos', 999, 1)`
   );
 }
 
@@ -53,6 +53,57 @@ export async function initDatabase(): Promise<void> {
 function runMigrations(db: SQLite.SQLiteDatabase): void {
   addColumnIfMissing(db, "mistakes", "mistake_type_ru", "TEXT");
   addColumnIfMissing(db, "subjects", "is_hidden", "INTEGER NOT NULL DEFAULT 0");
+  migrateEmojiIconsToKeys(db);
+}
+
+/**
+ * У пользователей, установивших приложение до перехода на SVG-иконки, в колонках
+ * subjects.icon и achievements.icon уже могут храниться emoji-строки (например "🧮").
+ * Переводим их на новые семантические ключи, которые понимает components/icons/iconMap.ts,
+ * чтобы у уже существующих пользователей интерфейс тоже перешёл на новые иконки
+ * без сброса прогресса и без дублирования записей.
+ */
+function migrateEmojiIconsToKeys(db: SQLite.SQLiteDatabase): void {
+  const subjectIconMigration: Record<string, string> = {
+    "🧮": "math",
+    "🇷🇺": "russian",
+    "🇬🇧": "english",
+    "⚗️": "chemistry",
+    "⚛️": "physics",
+    "🆘": "sos",
+  };
+  const achievementIconMigration: Record<string, string> = {
+    "🏁": "flag",
+    "🏆": "trophy",
+    "📚": "books",
+    "🧮": "calculator",
+    "⚡": "bolt",
+    "🔥": "flame",
+    "⚔️": "sword",
+    "💀": "skull",
+    "🎯": "target",
+    "✏️": "pencil",
+    "⭐": "star",
+    "🌟": "sparkle-star",
+  };
+
+  const subjectsTableExists = db.getFirstSync<{ name: string }>(
+    `SELECT name FROM sqlite_master WHERE type='table' AND name='subjects'`
+  );
+  if (subjectsTableExists) {
+    for (const [emoji, key] of Object.entries(subjectIconMigration)) {
+      db.runSync(`UPDATE subjects SET icon = ? WHERE icon = ?`, [key, emoji]);
+    }
+  }
+
+  const achievementsTableExists = db.getFirstSync<{ name: string }>(
+    `SELECT name FROM sqlite_master WHERE type='table' AND name='achievements'`
+  );
+  if (achievementsTableExists) {
+    for (const [emoji, key] of Object.entries(achievementIconMigration)) {
+      db.runSync(`UPDATE achievements SET icon = ? WHERE icon = ?`, [key, emoji]);
+    }
+  }
 }
 
 function addColumnIfMissing(

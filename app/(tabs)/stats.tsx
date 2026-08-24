@@ -5,6 +5,8 @@ import { getWeeklyMistakeSummary, MistakePattern } from "../../lib/db/mistakesRe
 import { getAllAchievementsWithStatus, AchievementStatus } from "../../lib/gamification/achievements";
 import { Card } from "../../components/Card";
 import { colors, spacing } from "../../components/theme";
+import { Icon } from "../../components/icons/Icon";
+import { resolveIconName } from "../../components/icons/iconMap";
 
 export default function StatsScreen() {
   const subjects = useSubjectsStore((s) => s.subjects);
@@ -41,9 +43,15 @@ export default function StatsScreen() {
             key={a.code}
             style={[styles.achievementCard, !a.unlocked && styles.achievementCardLocked] as any}
           >
-            <Text style={[styles.achievementIcon, !a.unlocked && styles.achievementIconLocked]}>
-              {a.unlocked ? a.icon : "🔒"}
-            </Text>
+            <View
+              style={[styles.achievementIconWrap, !a.unlocked && styles.achievementIconLocked]}
+            >
+              <Icon
+                name={a.unlocked ? resolveIconName(a.icon) : "lock"}
+                size={26}
+                color={a.unlocked ? colors.textPrimary : colors.textMuted}
+              />
+            </View>
             <Text style={[styles.achievementTitle, !a.unlocked && styles.textMuted]}>{a.title}</Text>
             <Text style={styles.achievementDesc}>{a.description}</Text>
           </Card>
@@ -66,9 +74,10 @@ export default function StatsScreen() {
         if (mistakes.length === 0) return null;
         return (
           <Card key={s.id} style={styles.card}>
-            <Text style={styles.subjectTitle}>
-              {s.icon} {s.name}
-            </Text>
+            <View style={styles.subjectTitleRow}>
+              <Icon name={resolveIconName(s.icon)} size={18} color={colors.textPrimary} />
+              <Text style={styles.subjectTitle}>{s.name}</Text>
+            </View>
             {mistakes.map((m, idx) => (
               <View key={idx} style={styles.mistakeRow}>
                 <Text style={styles.mistakeText}>
@@ -95,10 +104,19 @@ const styles = StyleSheet.create({
   mistakeRow: { flexDirection: "row", justifyContent: "space-between" },
   mistakeText: { color: colors.textSecondary, fontSize: 14, flex: 1 },
   mistakeCount: { color: colors.warning, fontSize: 14, fontWeight: "700" },
+  subjectTitleRow: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
   achievementsGrid: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
   achievementCard: { width: "47%", alignItems: "center", gap: 4, paddingVertical: spacing.md },
   achievementCardLocked: { opacity: 0.5 },
-  achievementIcon: { fontSize: 32 },
+  achievementIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.surfaceElevated,
+    marginBottom: 4,
+  },
   achievementIconLocked: { opacity: 0.6 },
   achievementTitle: { color: colors.textPrimary, fontSize: 13, fontWeight: "700", textAlign: "center" },
   achievementDesc: { color: colors.textMuted, fontSize: 11, textAlign: "center" },

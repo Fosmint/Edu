@@ -7,6 +7,7 @@ import { useSubjectsStore } from "../stores/useSubjectsStore";
 import { useProfileStore } from "../stores/useProfileStore";
 import { Card } from "../components/Card";
 import { colors, spacing, radius } from "../components/theme";
+import { Icon, IconName } from "../components/icons/Icon";
 
 const SUBJECT_NAMES: Record<string, string> = {
   math: "Математика",
@@ -16,7 +17,18 @@ const SUBJECT_NAMES: Record<string, string> = {
   physics: "Физика",
 };
 
-const TIER_LABELS: Record<number, string> = { 1: "🟢 База", 2: "🟡 Средний", 3: "🔴 Сложный", 4: "💀 Продвинутый" };
+const TIER_LABELS: Record<number, string> = {
+  1: "База",
+  2: "Средний",
+  3: "Сложный",
+  4: "Продвинутый",
+};
+const TIER_ICONS: Record<number, IconName> = {
+  1: "circle-filled-green",
+  2: "circle-filled-yellow",
+  3: "circle-filled-red",
+  4: "skull",
+};
 
 export default function AddTopicScreen() {
   const router = useRouter();
@@ -99,7 +111,10 @@ export default function AddTopicScreen() {
             <Text style={styles.suggestionValue}>{suggestion.topic_description}</Text>
 
             <Text style={styles.suggestionLabel}>Уровень сложности для старта</Text>
-            <Text style={styles.suggestionValue}>{TIER_LABELS[suggestion.suggested_difficulty_tier]}</Text>
+            <View style={styles.tierRow}>
+              <Icon name={TIER_ICONS[suggestion.suggested_difficulty_tier]} size={16} color={colors.textPrimary} />
+              <Text style={styles.suggestionValue}>{TIER_LABELS[suggestion.suggested_difficulty_tier]}</Text>
+            </View>
 
             {suggestion.parent_topic_name && (
               <>
@@ -159,6 +174,7 @@ const styles = StyleSheet.create({
   suggestionCard: { gap: spacing.xs },
   suggestionLabel: { color: colors.textMuted, fontSize: 12, marginTop: spacing.xs, textTransform: "uppercase" },
   suggestionValue: { color: colors.textPrimary, fontSize: 15 },
+  tierRow: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
   actionsRow: { flexDirection: "row", gap: spacing.sm, marginTop: spacing.md },
   cancelButton: {
     flex: 1,

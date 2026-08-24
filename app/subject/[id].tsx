@@ -5,13 +5,20 @@ import { useSubjectsStore } from "../../stores/useSubjectsStore";
 import { getSubject, deleteTopic, isCustomTopic } from "../../lib/db/subjectsRepo";
 import { Card } from "../../components/Card";
 import { colors, spacing, radius } from "../../components/theme";
+import { Icon, IconName } from "../../components/icons/Icon";
+import { resolveIconName } from "../../components/icons/iconMap";
 
-const TIER_ICONS: Record<number, string> = { 1: "🟢", 2: "🟡", 3: "🔴", 4: "💀" };
-const STATUS_ICONS: Record<string, string> = {
-  locked: "🔒",
-  available: "⚪",
-  in_progress: "🟡",
-  mastered: "✅",
+const TIER_ICONS: Record<number, IconName> = {
+  1: "circle-filled-green",
+  2: "circle-filled-yellow",
+  3: "circle-filled-red",
+  4: "skull",
+};
+const STATUS_ICONS: Record<string, IconName> = {
+  locked: "lock",
+  available: "circle-outline",
+  in_progress: "circle-filled-yellow",
+  mastered: "check-circle",
 };
 
 export default function SubjectScreen() {
@@ -52,9 +59,12 @@ export default function SubjectScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: subject ? `${subject.icon} ${subject.name}` : "" }} />
+      <Stack.Screen options={{ title: subject ? subject.name : "" }} />
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-        <Text style={styles.mapTitle}>Карта знаний</Text>
+        <View style={styles.mapTitleRow}>
+          {subject && <Icon name={resolveIconName(subject.icon)} size={20} color={colors.textPrimary} />}
+          <Text style={styles.mapTitle}>Карта знаний</Text>
+        </View>
         {topics.map((t) => {
           const locked = t.status === "locked";
           const canDelete = isCustomTopic(t.id);
@@ -65,13 +75,18 @@ export default function SubjectScreen() {
               onPress={locked ? undefined : () => router.push(`/topic/${t.id}/chat`)}
             >
               <View style={styles.topicRow}>
-                <Text style={styles.statusIcon}>{STATUS_ICONS[t.status]}</Text>
+                <Icon
+                  name={STATUS_ICONS[t.status]}
+                  size={20}
+                  color={t.status === "mastered" ? colors.success : colors.textPrimary}
+                />
                 <View style={styles.topicInfo}>
                   <Text style={[styles.topicName, locked && styles.textMuted]}>{t.name}</Text>
                   {!locked && (
-                    <Text style={styles.topicMeta}>
-                      {TIER_ICONS[t.current_difficulty_tier]} {Math.round(t.mastery_pct)}% освоено
-                    </Text>
+                    <View style={styles.topicMetaRow}>
+                      <Icon name={TIER_ICONS[t.current_difficulty_tier]} size={13} color={colors.textSecondary} />
+                      <Text style={styles.topicMeta}>{Math.round(t.mastery_pct)}% освоено</Text>
+                    </View>
                   )}
                   {locked && <Text style={styles.textMuted}>Откроется после предыдущей темы</Text>}
                 </View>
@@ -81,7 +96,7 @@ export default function SubjectScreen() {
                     onPress={() => handleDeleteTopic(t.id, t.name)}
                     hitSlop={8}
                   >
-                    <Text style={styles.deleteButtonText}>✕</Text>
+                    <Icon name="close" size={14} color={colors.error} />
                   </Pressable>
                 )}
               </View>
@@ -98,7 +113,8 @@ export default function SubjectScreen() {
                       style={styles.actionButtonBoss}
                       onPress={() => router.push(`/topic/${t.id}/boss`)}
                     >
-                      <Text style={styles.actionButtonBossText}>⚔️ Босс</Text>
+                      <Icon name="sword" size={14} color={colors.background} />
+                      <Text style={styles.actionButtonBossText}>Босс</Text>
                     </Pressable>
                   )}
                 </View>
@@ -118,13 +134,14 @@ export default function SubjectScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.md, gap: spacing.sm, paddingBottom: spacing.xl },
-  mapTitle: { color: colors.textPrimary, fontSize: 18, fontWeight: "700", marginBottom: spacing.xs },
+  mapTitleRow: { flexDirection: "row", alignItems: "center", gap: spacing.xs, marginBottom: spacing.xs },
+  mapTitle: { color: colors.textPrimary, fontSize: 18, fontWeight: "700" },
   topicCard: { gap: spacing.sm },
   topicCardLocked: { opacity: 0.5 },
   topicRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-  statusIcon: { fontSize: 20 },
   topicInfo: { flex: 1, gap: 2 },
   topicName: { color: colors.textPrimary, fontSize: 16, fontWeight: "600" },
+  topicMetaRow: { flexDirection: "row", alignItems: "center", gap: 4 },
   topicMeta: { color: colors.textSecondary, fontSize: 13 },
   textMuted: { color: colors.textMuted },
   actionsRow: { flexDirection: "row", gap: spacing.sm },
@@ -154,7 +171,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: colors.surfaceElevated,
   },
-  deleteButtonText: { color: colors.error, fontSize: 15, fontWeight: "700" },
   addTopicButton: {
     marginTop: spacing.sm,
     borderWidth: 1,

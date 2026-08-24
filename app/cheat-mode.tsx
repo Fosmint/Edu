@@ -18,6 +18,7 @@ import {
 } from "../lib/ai/cheatMode";
 import { OpenRouterError } from "../lib/ai/openrouter";
 import { colors, spacing, radius } from "../components/theme";
+import { Icon } from "../components/icons/Icon";
 
 interface DisplayMessage {
   role: "user" | "assistant";
@@ -74,7 +75,7 @@ export default function CheatModeScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: "🆘 Срочно списать" }} />
+      <Stack.Screen options={{ title: "Срочно списать" }} />
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -124,7 +125,7 @@ export default function CheatModeScreen() {
             editable={!loading}
           />
           <Pressable style={styles.sendButton} onPress={handleSend} disabled={loading || !input.trim()}>
-            <Text style={styles.sendButtonText}>➤</Text>
+            <Icon name="send" size={18} color={colors.background} />
           </Pressable>
         </View>
       </KeyboardAvoidingView>
@@ -186,5 +187,4 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  sendButtonText: { color: colors.background, fontSize: 18, fontWeight: "700" },
 });

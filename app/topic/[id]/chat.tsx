@@ -22,6 +22,7 @@ import { OpenRouterError } from "../../../lib/ai/openrouter";
 import { getDb } from "../../../lib/db/client";
 import { useProfileStore } from "../../../stores/useProfileStore";
 import { colors, spacing, radius } from "../../../components/theme";
+import { Icon } from "../../../components/icons/Icon";
 
 interface DisplayMessage {
   role: "user" | "assistant";
@@ -92,7 +93,7 @@ export default function TopicChatScreen() {
   async function handleDidntUnderstand() {
     if (!topic || !sessionId) return;
     setError(null);
-    setMessages((prev) => [...prev, { role: "user", content: "🤯 Я ничего не понял" }]);
+    setMessages((prev) => [...prev, { role: "user", content: "Я ничего не понял" }]);
     setLoading(true);
     scrollToBottom();
 
@@ -172,7 +173,10 @@ export default function TopicChatScreen() {
         </ScrollView>
 
         <Pressable style={styles.confusedButton} onPress={handleDidntUnderstand} disabled={loading}>
-          <Text style={styles.confusedButtonText}>🤯 Я ничего не понял</Text>
+          <View style={styles.confusedButtonRow}>
+            <Icon name="confused" size={16} color={colors.textPrimary} />
+            <Text style={styles.confusedButtonText}>Я ничего не понял</Text>
+          </View>
         </Pressable>
 
         <View style={styles.inputRow}>
@@ -186,7 +190,7 @@ export default function TopicChatScreen() {
             editable={!loading}
           />
           <Pressable style={styles.sendButton} onPress={() => handleSend()} disabled={loading || !input.trim()}>
-            <Text style={styles.sendButtonText}>➤</Text>
+            <Icon name="send" size={18} color={colors.background} />
           </Pressable>
         </View>
       </KeyboardAvoidingView>
@@ -224,6 +228,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   confusedButtonText: { color: colors.textPrimary, fontWeight: "600", fontSize: 14 },
+  confusedButtonRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: spacing.xs },
   inputRow: {
     flexDirection: "row",
     padding: spacing.md,
@@ -251,7 +256,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  sendButtonText: { color: colors.background, fontSize: 18, fontWeight: "700" },
   centerScreen: { flex: 1, backgroundColor: colors.background, alignItems: "center", justifyContent: "center", padding: spacing.lg, gap: spacing.sm },
   debugBanner: { backgroundColor: "#332200", padding: 6 },
   debugText: { color: "#FFD966", fontSize: 10 },

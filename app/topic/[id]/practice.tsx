@@ -11,6 +11,7 @@ import { getDb } from "../../../lib/db/client";
 import { useProfileStore } from "../../../stores/useProfileStore";
 import { Card } from "../../../components/Card";
 import { colors, spacing, radius } from "../../../components/theme";
+import { Icon } from "../../../components/icons/Icon";
 
 const XP_PER_CORRECT = 10;
 
@@ -220,7 +221,14 @@ export default function TopicPracticeScreen() {
 
         {result && (
           <Card style={[styles.resultCard, result.correct ? styles.resultCorrect : styles.resultIncorrect] as any}>
-            <Text style={styles.resultTitle}>{result.correct ? "✅ Правильно!" : "❌ Не совсем"}</Text>
+            <View style={styles.resultTitleRow}>
+              <Icon
+                name={result.correct ? "check-circle" : "x-circle"}
+                size={20}
+                color={result.correct ? colors.success : colors.error}
+              />
+              <Text style={styles.resultTitle}>{result.correct ? "Правильно!" : "Не совсем"}</Text>
+            </View>
             <Text style={styles.resultFeedback}>{result.feedback}</Text>
             <Pressable style={styles.nextButton} onPress={handleNext}>
               <Text style={styles.nextButtonText}>
@@ -263,6 +271,7 @@ const styles = StyleSheet.create({
   resultCard: { gap: spacing.sm, borderWidth: 1 },
   resultCorrect: { borderColor: colors.success },
   resultIncorrect: { borderColor: colors.error },
+  resultTitleRow: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
   resultTitle: { color: colors.textPrimary, fontSize: 16, fontWeight: "700" },
   resultFeedback: { color: colors.textSecondary, lineHeight: 20 },
   nextButton: {

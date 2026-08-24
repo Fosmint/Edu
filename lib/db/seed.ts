@@ -22,12 +22,14 @@ export interface TopicSeed {
   is_unlocked: number; // первая тема каждого предмета открыта сразу
 }
 
+// Поле icon хранит семантический ключ (не emoji) — см. components/icons/iconMap.ts,
+// который сопоставляет ключ с конкретной SVG-иконкой при отрисовке.
 export const SUBJECTS: SubjectSeed[] = [
-  { id: "math", name: "Математика", icon: "🧮", sort_order: 1 },
-  { id: "russian", name: "Русский язык", icon: "🇷🇺", sort_order: 2 },
-  { id: "english", name: "Английский язык", icon: "🇬🇧", sort_order: 3 },
-  { id: "chemistry", name: "Химия", icon: "⚗️", sort_order: 4 },
-  { id: "physics", name: "Физика", icon: "⚛️", sort_order: 5 },
+  { id: "math", name: "Математика", icon: "math", sort_order: 1 },
+  { id: "russian", name: "Русский язык", icon: "russian", sort_order: 2 },
+  { id: "english", name: "Английский язык", icon: "english", sort_order: 3 },
+  { id: "chemistry", name: "Химия", icon: "chemistry", sort_order: 4 },
+  { id: "physics", name: "Физика", icon: "physics", sort_order: 5 },
 ];
 
 export const TOPICS: TopicSeed[] = [

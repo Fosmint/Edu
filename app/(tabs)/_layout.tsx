@@ -1,8 +1,8 @@
 import { Tabs } from "expo-router";
-import { Text } from "react-native";
+import { Icon, IconName } from "../../components/icons/Icon";
 
-function TabIcon({ emoji }: { emoji: string }) {
-  return <Text style={{ fontSize: 20 }}>{emoji}</Text>;
+function TabIcon({ name, color }: { name: IconName; color: string }) {
+  return <Icon name={name} size={22} color={color} />;
 }
 
 export default function TabsLayout() {
@@ -19,19 +19,31 @@ export default function TabsLayout() {
     >
       <Tabs.Screen
         name="index"
-        options={{ title: "Главная", tabBarIcon: () => <TabIcon emoji="🏠" /> }}
+        options={{
+          title: "Главная",
+          tabBarIcon: ({ color }) => <TabIcon name="home" color={color} />,
+        }}
       />
       <Tabs.Screen
         name="subjects"
-        options={{ title: "Предметы", tabBarIcon: () => <TabIcon emoji="📚" /> }}
+        options={{
+          title: "Предметы",
+          tabBarIcon: ({ color }) => <TabIcon name="books" color={color} />,
+        }}
       />
       <Tabs.Screen
         name="stats"
-        options={{ title: "Статистика", tabBarIcon: () => <TabIcon emoji="📊" /> }}
+        options={{
+          title: "Статистика",
+          tabBarIcon: ({ color }) => <TabIcon name="chart" color={color} />,
+        }}
       />
       <Tabs.Screen
         name="settings"
-        options={{ title: "Настройки", tabBarIcon: () => <TabIcon emoji="⚙️" /> }}
+        options={{
+          title: "Настройки",
+          tabBarIcon: ({ color }) => <TabIcon name="settings" color={color} />,
+        }}
       />
     </Tabs>
   );

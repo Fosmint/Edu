@@ -10,6 +10,7 @@ import { getDb } from "../../../lib/db/client";
 import { useProfileStore } from "../../../stores/useProfileStore";
 import { Card } from "../../../components/Card";
 import { colors, spacing, radius } from "../../../components/theme";
+import { Icon } from "../../../components/icons/Icon";
 
 const BOSS_QUESTION_COUNT = 20;
 const XP_PER_CORRECT = 15; // выше чем обычная практика — это финальный экзамен
@@ -177,7 +178,9 @@ export default function TopicBossScreen() {
 
     return (
       <View style={styles.centerScreen}>
-        <Text style={styles.finishEmoji}>{passed ? "🏆" : "💪"}</Text>
+        <View style={styles.finishIconWrap}>
+          <Icon name={passed ? "trophy" : "muscle"} size={48} color={colors.textPrimary} />
+        </View>
         <Text style={styles.finishTitle}>{passed ? "Тема освоена!" : "Пока не совсем"}</Text>
         <Text style={styles.finishScore}>
           {correctCount} из {answersGiven.length} правильно ({scorePct}%)
@@ -199,10 +202,13 @@ export default function TopicBossScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: `⚔️ Босс · ${currentIndex + 1}/${questions.length}` }} />
+      <Stack.Screen options={{ title: `Босс · ${currentIndex + 1}/${questions.length}` }} />
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         <Card style={styles.warningCard}>
-          <Text style={styles.warningText}>Без подсказок. Отвечай так, как знаешь на самом деле.</Text>
+          <View style={styles.warningTitleRow}>
+            <Icon name="sword" size={14} color={colors.warning} />
+            <Text style={styles.warningText}>Без подсказок. Отвечай так, как знаешь на самом деле.</Text>
+          </View>
         </Card>
         <Card>
           <Text style={styles.questionText}>{q.question}</Text>
@@ -237,6 +243,7 @@ const styles = StyleSheet.create({
   centerScreen: { flex: 1, backgroundColor: colors.background, alignItems: "center", justifyContent: "center", padding: spacing.lg, gap: spacing.sm },
   loadingText: { color: colors.textSecondary, textAlign: "center" },
   warningCard: { borderColor: colors.warning, borderWidth: 1 },
+  warningTitleRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: spacing.xs },
   warningText: { color: colors.warning, fontSize: 13, textAlign: "center" },
   questionText: { color: colors.textPrimary, fontSize: 17, lineHeight: 24 },
   answerInput: {
@@ -259,7 +266,7 @@ const styles = StyleSheet.create({
   errorText: { color: colors.error, textAlign: "center" },
   retryButton: { backgroundColor: colors.surfaceElevated, borderRadius: radius.sm, paddingHorizontal: spacing.lg, paddingVertical: spacing.sm },
   retryButtonText: { color: colors.textPrimary, fontWeight: "600" },
-  finishEmoji: { fontSize: 56 },
+  finishIconWrap: { alignItems: "center", justifyContent: "center", marginBottom: spacing.xs },
   finishTitle: { color: colors.textPrimary, fontSize: 22, fontWeight: "700" },
   finishScore: { color: colors.textSecondary, fontSize: 16 },
   finishHint: { color: colors.textMuted, fontSize: 13, textAlign: "center", paddingHorizontal: spacing.lg },
