@@ -6,6 +6,7 @@ export interface Subject {
   icon: string;
   sort_order: number;
   overall_progress_pct: number;
+  is_hidden: number;
 }
 
 export interface Topic {
@@ -30,7 +31,7 @@ export interface TopicWithProgress extends Topic {
 
 export function getAllSubjects(): Subject[] {
   const db = getDb();
-  return db.getAllSync<Subject>("SELECT * FROM subjects ORDER BY sort_order");
+  return db.getAllSync<Subject>("SELECT * FROM subjects WHERE is_hidden = 0 ORDER BY sort_order");
 }
 
 export function getSubject(subjectId: string): Subject | null {

@@ -92,7 +92,7 @@ export default function TopicChatScreen() {
   async function handleDidntUnderstand() {
     if (!topic || !sessionId) return;
     setError(null);
-    setMessages((prev) => [...prev, { role: "user", content: "🤯 Я нихуя не понял" }]);
+    setMessages((prev) => [...prev, { role: "user", content: "🤯 Я ничего не понял" }]);
     setLoading(true);
     scrollToBottom();
 
@@ -172,7 +172,7 @@ export default function TopicChatScreen() {
         </ScrollView>
 
         <Pressable style={styles.confusedButton} onPress={handleDidntUnderstand} disabled={loading}>
-          <Text style={styles.confusedButtonText}>🤯 Я нихуя не понял</Text>
+          <Text style={styles.confusedButtonText}>🤯 Я ничего не понял</Text>
         </Pressable>
 
         <View style={styles.inputRow}>

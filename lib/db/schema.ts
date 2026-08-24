@@ -26,7 +26,8 @@ CREATE TABLE IF NOT EXISTS subjects (
   name TEXT NOT NULL,
   icon TEXT NOT NULL,
   sort_order INTEGER NOT NULL,
-  overall_progress_pct REAL NOT NULL DEFAULT 0
+  overall_progress_pct REAL NOT NULL DEFAULT 0,
+  is_hidden INTEGER NOT NULL DEFAULT 0   -- служебные "предметы" (например для режима "Срочно списать"), не показываются в обычных списках
 );
 
 -- Темы внутри предмета, с иерархией (parent_id для карты знаний)

@@ -58,6 +58,7 @@ export default function RootLayout() {
         <Stack.Screen name="topic/[id]/practice" options={{ title: "Практика" }} />
         <Stack.Screen name="topic/[id]/boss" options={{ title: "⚔️ Босс темы" }} />
         <Stack.Screen name="add-topic" options={{ title: "Новая тема", presentation: "modal" }} />
+        <Stack.Screen name="cheat-mode" options={{ title: "🆘 Срочно списать" }} />
       </Stack>
       <AchievementToast />
     </GestureHandlerRootView>

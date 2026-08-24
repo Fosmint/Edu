@@ -34,6 +34,14 @@ export async function initDatabase(): Promise<void> {
   if (!subjectCountRow || subjectCountRow.count === 0) {
     seedSubjectsAndTopics(db);
   }
+
+  // Служебный "предмет"-заглушка для режима "Срочно списать" — не тема обучения,
+  // а просто нужен как FK для sessions.subject_id (там NOT NULL REFERENCES subjects).
+  // INSERT OR IGNORE, а не привязка к "первому запуску" — иначе у пользователей,
+  // уже имеющих БД, эта запись никогда бы не появилась.
+  db.runSync(
+    `INSERT OR IGNORE INTO subjects (id, name, icon, sort_order, is_hidden) VALUES ('cheat_mode', 'Срочно списать', '🆘', 999, 1)`
+  );
 }
 
 /**
@@ -44,6 +52,7 @@ export async function initDatabase(): Promise<void> {
  */
 function runMigrations(db: SQLite.SQLiteDatabase): void {
   addColumnIfMissing(db, "mistakes", "mistake_type_ru", "TEXT");
+  addColumnIfMissing(db, "subjects", "is_hidden", "INTEGER NOT NULL DEFAULT 0");
 }
 
 function addColumnIfMissing(

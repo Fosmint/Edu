@@ -125,7 +125,10 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     description: "Позанимался всеми 5 предметами хотя бы раз",
     check: (db) => {
       const row = db.getFirstSync<{ count: number }>(
-        `SELECT COUNT(DISTINCT subject_id) as count FROM sessions`
+        `SELECT COUNT(DISTINCT s.subject_id) as count
+         FROM sessions s
+         JOIN subjects sub ON sub.id = s.subject_id
+         WHERE sub.is_hidden = 0`
       );
       return (row?.count ?? 0) >= 5;
     },

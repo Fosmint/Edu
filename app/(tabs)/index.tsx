@@ -98,6 +98,14 @@ export default function HomeScreen() {
       <Pressable style={styles.boredButton} onPress={() => router.push("/(tabs)/subjects")}>
         <Text style={styles.boredButtonText}>🎲 Мне скучно</Text>
       </Pressable>
+
+      <Pressable style={styles.cheatButton} onPress={() => router.push("/cheat-mode")}>
+        <View style={styles.cheatButtonRow}>
+          <Text style={styles.cheatBadge}>SOS</Text>
+          <Text style={styles.cheatButtonText}>Срочно списать</Text>
+        </View>
+        <Text style={styles.cheatButtonSubtitle}>только для реально трудных дней</Text>
+      </Pressable>
     </ScrollView>
   );
 }
@@ -170,4 +178,28 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   boredButtonText: { color: colors.textPrimary, fontSize: 16, fontWeight: "700" },
+  cheatButton: {
+    marginTop: spacing.xs,
+    backgroundColor: "transparent",
+    borderRadius: radius.md,
+    paddingVertical: spacing.md,
+    alignItems: "center",
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderColor: "#5C2A2A",
+    gap: spacing.xs,
+  },
+  cheatButtonRow: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
+  cheatBadge: {
+    backgroundColor: colors.error,
+    color: "#FFFFFF",
+    fontSize: 11,
+    fontWeight: "800",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: radius.sm,
+    overflow: "hidden",
+  },
+  cheatButtonText: { color: colors.textPrimary, fontSize: 16, fontWeight: "700" },
+  cheatButtonSubtitle: { color: colors.textMuted, fontSize: 12 },
 });
