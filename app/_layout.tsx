@@ -61,7 +61,7 @@ export default function RootLayout() {
         <Stack.Screen name="add-topic" options={{ title: "Новая тема", presentation: "modal" }} />
         <Stack.Screen name="exam-prep" options={{ title: "Контрольная скоро", presentation: "modal" }} />
         <Stack.Screen name="exam-prep-plan" options={{ title: "План подготовки" }} />
-        <Stack.Screen name="cheat-mode/index" options={{ title: "Срочно списать" }} />
+        <Stack.Screen name="cheat-mode" options={{ title: "Срочно списать" }} />
         <Stack.Screen name="cheat-mode/[sessionId]" options={{ title: "Срочно списать" }} />
       </Stack>
       <AchievementToast />
