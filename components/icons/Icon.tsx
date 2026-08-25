@@ -48,6 +48,7 @@ export type IconName =
   | "chevron-up"
   | "chevron-down"
   | "plus"
+  | "trash"
   // достижения
   | "flag"
   | "trophy"
@@ -400,6 +401,17 @@ export function Icon({ name, size = 20, color = colors.textPrimary, strokeWidth 
         <Svg {...common}>
           <Line x1="12" y1="5" x2="12" y2="19" {...stroke} />
           <Line x1="5" y1="12" x2="19" y2="12" {...stroke} />
+        </Svg>
+      );
+
+    case "trash":
+      return (
+        <Svg {...common}>
+          <Path d="M5 7h14" {...stroke} />
+          <Path d="M9.5 7V5a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v2" {...stroke} />
+          <Path d="M7 7l1 13a1.5 1.5 0 0 0 1.5 1.4h5a1.5 1.5 0 0 0 1.5-1.4l1-13" {...stroke} />
+          <Line x1="10" y1="11" x2="10" y2="17" {...stroke} />
+          <Line x1="14" y1="11" x2="14" y2="17" {...stroke} />
         </Svg>
       );
 

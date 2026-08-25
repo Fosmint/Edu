@@ -90,7 +90,10 @@ export function markTopicMastered(topicId: string): string[] {
       unlockedTopicIds.push(child.id);
     }
 
-    recalculateSubjectProgress(db, getTopic(topicId)!.subject_id);
+    const updatedTopic = getTopic(topicId);
+    if (updatedTopic) {
+      recalculateSubjectProgress(db, updatedTopic.subject_id);
+    }
   });
 
   return unlockedTopicIds;

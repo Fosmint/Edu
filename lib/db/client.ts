@@ -53,6 +53,7 @@ export async function initDatabase(): Promise<void> {
 function runMigrations(db: SQLite.SQLiteDatabase): void {
   addColumnIfMissing(db, "mistakes", "mistake_type_ru", "TEXT");
   addColumnIfMissing(db, "subjects", "is_hidden", "INTEGER NOT NULL DEFAULT 0");
+  addColumnIfMissing(db, "sessions", "title", "TEXT");
   migrateEmojiIconsToKeys(db);
 }
 
@@ -158,6 +159,7 @@ function seedSubjectsAndTopics(db: SQLite.SQLiteDatabase): void {
 export async function resetDatabase(): Promise<void> {
   const db = getDb();
   db.execSync(`
+    DROP TABLE IF EXISTS exam_preps;
     DROP TABLE IF EXISTS daily_tasks;
     DROP TABLE IF EXISTS exams;
     DROP TABLE IF EXISTS achievements;

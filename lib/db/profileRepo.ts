@@ -1,5 +1,5 @@
 import { getDb } from "./client";
-import { format } from "date-fns";
+import { format, differenceInCalendarDays, parseISO } from "date-fns";
 
 export interface Profile {
   id: number;
@@ -37,7 +37,7 @@ export function addXp(amount: number): { profile: Profile; leveledUp: boolean } 
     let newXp = current.xp + amount;
     let newLevel = current.level;
 
-    while (newXp >= xpForLevel(newLevel)) {
+    while (newXp >= xpForLevel(newLevel) && xpForLevel(newLevel) > 0) {
       newXp -= xpForLevel(newLevel);
       newLevel += 1;
     }
@@ -60,9 +60,7 @@ function computeStreak(lastActiveDate: string | null, currentStreak: number, tod
   if (!lastActiveDate) return 1;
   if (lastActiveDate === today) return currentStreak; // уже занимались сегодня
 
-  const last = new Date(lastActiveDate);
-  const todayDate = new Date(today);
-  const diffDays = Math.round((todayDate.getTime() - last.getTime()) / 86400000);
+  const diffDays = differenceInCalendarDays(parseISO(today), parseISO(lastActiveDate));
 
   if (diffDays === 1) return currentStreak + 1; // занимался вчера — стрик продолжается
   return 1; // пропустил день(и) — стрик сбрасывается

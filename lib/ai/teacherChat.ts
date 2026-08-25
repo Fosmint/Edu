@@ -4,6 +4,77 @@ import { callOpenRouter, ChatMessage } from "./openrouter";
 import { getDb } from "../db/client";
 
 /**
+ * Возвращает список чатов по теме (для экрана со списком чатов), самые новые первыми.
+ * Каждый чат — отдельная запись в sessions (type='chat'), пользователь может завести
+ * их сколько угодно — это то, что позволяет не тащить всю историю в одном бесконечном
+ * диалоге и не тратить токены на контекст, который уже не нужен.
+ */
+export interface ChatSummary {
+  id: number;
+  title: string;
+  messageCount: number;
+  lastMessageAt: string | null;
+  lastMessagePreview: string | null;
+}
+
+export function listChatsForTopic(topicId: string): ChatSummary[] {
+  const db = getDb();
+  return db.getAllSync<ChatSummary>(
+    `SELECT
+       s.id as id,
+       COALESCE(s.title, 'Новый чат') as title,
+       (SELECT COUNT(*) FROM messages m WHERE m.session_id = s.id AND m.role != 'system') as messageCount,
+       (SELECT MAX(created_at) FROM messages m WHERE m.session_id = s.id) as lastMessageAt,
+       (SELECT content FROM messages m WHERE m.session_id = s.id AND m.role != 'system' ORDER BY m.id DESC LIMIT 1) as lastMessagePreview
+     FROM sessions s
+     WHERE s.topic_id = ? AND s.type = 'chat'
+     ORDER BY COALESCE(
+       (SELECT MAX(created_at) FROM messages m WHERE m.session_id = s.id),
+       s.started_at
+     ) DESC`,
+    [topicId]
+  );
+}
+
+/** Создаёт новый именованный (или безымянный — заголовок проставится по первому сообщению) чат по теме. */
+export function createChat(params: { subjectId: string; topicId: string; title?: string }): number {
+  const db = getDb();
+  const result = db.runSync(
+    `INSERT INTO sessions (subject_id, topic_id, type, title) VALUES (?, ?, 'chat', ?)`,
+    [params.subjectId, params.topicId, params.title ?? null]
+  );
+  return result.lastInsertRowId;
+}
+
+/** Удаляет чат целиком (сессию + все её сообщения). */
+export function deleteChat(sessionId: number): void {
+  const db = getDb();
+  db.withTransactionSync(() => {
+    db.runSync(`DELETE FROM messages WHERE session_id = ?`, [sessionId]);
+    db.runSync(`DELETE FROM sessions WHERE id = ?`, [sessionId]);
+  });
+}
+
+/** Переименовывает чат вручную (пользователь может переименовать из списка чатов). */
+export function renameChat(sessionId: number, title: string): void {
+  const db = getDb();
+  db.runSync(`UPDATE sessions SET title = ? WHERE id = ?`, [title.trim() || null, sessionId]);
+}
+
+/**
+ * Если у чата ещё нет заголовка (title IS NULL) — проставляет его по первому сообщению
+ * пользователя (обрезая до разумной длины). Вызывается после первого обмена сообщениями.
+ */
+function autoTitleIfNeeded(sessionId: number, firstUserMessage: string): void {
+  const db = getDb();
+  const row = db.getFirstSync<{ title: string | null }>(`SELECT title FROM sessions WHERE id = ?`, [sessionId]);
+  if (row && !row.title) {
+    const title = firstUserMessage.trim().slice(0, 60) || "Новый чат";
+    db.runSync(`UPDATE sessions SET title = ? WHERE id = ?`, [title, sessionId]);
+  }
+}
+
+/**
  * Отправляет сообщение преподавателю в рамках сессии.
  * История чата берётся из БД по session_id, system-промпт собирается заново каждый раз
  * (чтобы контекст ученика был всегда свежим — прогресс мог измениться с прошлого сообщения).
@@ -22,6 +93,7 @@ export async function sendMessageToTeacher(params: {
     `INSERT INTO messages (session_id, role, content) VALUES (?, 'user', ?)`,
     [params.sessionId, params.userMessage]
   );
+  autoTitleIfNeeded(params.sessionId, params.userMessage);
 
   const contextBlock = buildStudentContext({
     subjectId: params.subjectId,
@@ -88,28 +160,7 @@ export async function requestSimplerExplanation(params: {
   });
 }
 
-/**
- * Возвращает id "постоянной" чат-сессии для темы — если такая уже существует
- * (сессия типа 'chat' без ended_at), переиспользует её, иначе создаёт новую.
- * Это то, что позволяет истории чата сохраняться между открытиями темы.
- */
-export function getOrCreateChatSession(params: { subjectId: string; topicId: string }): number {
-  const db = getDb();
-  const existing = db.getFirstSync<{ id: number }>(
-    `SELECT id FROM sessions WHERE topic_id = ? AND type = 'chat' AND ended_at IS NULL ORDER BY id DESC LIMIT 1`,
-    [params.topicId]
-  );
-  if (existing) {
-    console.log(`[EduMentor] Найдена существующая сессия ${existing.id} для темы ${params.topicId}`);
-    return existing.id;
-  }
-
-  const newId = createSession({ subjectId: params.subjectId, topicId: params.topicId, type: "chat" });
-  console.log(`[EduMentor] Создана новая сессия ${newId} для темы ${params.topicId}`);
-  return newId;
-}
-
-/** Загружает всю историю сообщений сессии — для восстановления чата при повторном открытии темы */
+/** Загружает всю историю сообщений сессии — для восстановления чата при открытии */
 export function getSessionMessages(sessionId: number): Array<{ role: "user" | "assistant"; content: string }> {
   const db = getDb();
   return db

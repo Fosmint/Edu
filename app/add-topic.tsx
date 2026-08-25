@@ -2,6 +2,7 @@ import { useState } from "react";
 import { View, Text, TextInput, Pressable, StyleSheet, ActivityIndicator, ScrollView } from "react-native";
 import { useRouter, Stack } from "expo-router";
 import { suggestTopicFromText, createTopicFromSuggestion, TopicSuggestion } from "../lib/ai/topicSuggestion";
+import { createChat } from "../lib/ai/teacherChat";
 import { OpenRouterError } from "../lib/ai/openrouter";
 import { useSubjectsStore } from "../stores/useSubjectsStore";
 import { useProfileStore } from "../stores/useProfileStore";
@@ -65,7 +66,8 @@ export default function AddTopicScreen() {
       refreshTopics(suggestion.subject_id);
       refreshSubjects();
       checkAchievements();
-      router.replace(`/topic/${topicId}/chat`);
+      const sessionId = createChat({ subjectId: suggestion.subject_id, topicId });
+      router.replace(`/topic/${topicId}/chat/${sessionId}`);
     } catch (e) {
       setError("Не удалось создать тему. Попробуй ещё раз.");
       setCreating(false);

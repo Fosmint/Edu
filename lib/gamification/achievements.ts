@@ -102,7 +102,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     description: "Победил первого босса темы",
     check: (db) => {
       const row = db.getFirstSync<{ count: number }>(
-        `SELECT COUNT(*) as count FROM exams WHERE type = 'boss' AND score >= 70`
+        `SELECT COUNT(*) as count FROM exams WHERE type = 'boss' AND score >= 0.7`
       );
       return (row?.count ?? 0) >= 1;
     },
@@ -114,7 +114,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     description: "Победил 5 боссов тем",
     check: (db) => {
       const row = db.getFirstSync<{ count: number }>(
-        `SELECT COUNT(*) as count FROM exams WHERE type = 'boss' AND score >= 70`
+        `SELECT COUNT(*) as count FROM exams WHERE type = 'boss' AND score >= 0.7`
       );
       return (row?.count ?? 0) >= 5;
     },

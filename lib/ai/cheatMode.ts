@@ -1,6 +1,5 @@
 import { callOpenRouter, ChatMessage } from "./openrouter";
 import { getDb } from "../db/client";
-import { createSession } from "./teacherChat";
 
 /**
  * "Срочно списать" — отдельный от обычного обучения режим. В отличие от BASE_TEACHER_PROMPT
@@ -74,18 +73,59 @@ export const CHEAT_MODE_PROMPT = `Режим «Срочно списать»
 export const CHEAT_MODE_SUBJECT_ID = "cheat_mode";
 
 /**
- * Возвращает id незавершённой сессии режима "Срочно списать", если такая уже есть,
- * иначе создаёт новую. Session type переиспользует 'chat' — отдельного типа под это
- * заводить не стали, различие полностью определяется subject_id = CHEAT_MODE_SUBJECT_ID.
+ * Список отдельных чатов режима "Срочно списать" — как и в обычных темах, пользователь
+ * может вести сразу несколько параллельных чатов (например по разным предметам за раз),
+ * не смешивая их историю и не раздувая токены одним бесконечным диалогом.
  */
-export function getOrCreateCheatSession(): number {
+export interface CheatChatSummary {
+  id: number;
+  title: string;
+  messageCount: number;
+  lastMessageAt: string | null;
+}
+
+export function listCheatChats(): CheatChatSummary[] {
   const db = getDb();
-  const existing = db.getFirstSync<{ id: number }>(
-    `SELECT id FROM sessions WHERE subject_id = ? AND type = 'chat' AND ended_at IS NULL ORDER BY id DESC LIMIT 1`,
+  return db.getAllSync<CheatChatSummary>(
+    `SELECT
+       s.id as id,
+       COALESCE(s.title, 'Новый чат') as title,
+       (SELECT COUNT(*) FROM messages m WHERE m.session_id = s.id AND m.role != 'system') as messageCount,
+       (SELECT MAX(created_at) FROM messages m WHERE m.session_id = s.id) as lastMessageAt
+     FROM sessions s
+     WHERE s.subject_id = ? AND s.type = 'chat'
+     ORDER BY COALESCE(
+       (SELECT MAX(created_at) FROM messages m WHERE m.session_id = s.id),
+       s.started_at
+     ) DESC`,
     [CHEAT_MODE_SUBJECT_ID]
   );
-  if (existing) return existing.id;
-  return createSession({ subjectId: CHEAT_MODE_SUBJECT_ID, type: "chat" });
+}
+
+export function createCheatChat(title?: string): number {
+  const db = getDb();
+  const result = db.runSync(`INSERT INTO sessions (subject_id, type, title) VALUES (?, 'chat', ?)`, [
+    CHEAT_MODE_SUBJECT_ID,
+    title ?? null,
+  ]);
+  return result.lastInsertRowId;
+}
+
+export function deleteCheatChat(sessionId: number): void {
+  const db = getDb();
+  db.withTransactionSync(() => {
+    db.runSync(`DELETE FROM messages WHERE session_id = ?`, [sessionId]);
+    db.runSync(`DELETE FROM sessions WHERE id = ?`, [sessionId]);
+  });
+}
+
+function autoTitleCheatChat(sessionId: number, firstUserMessage: string): void {
+  const db = getDb();
+  const row = db.getFirstSync<{ title: string | null }>(`SELECT title FROM sessions WHERE id = ?`, [sessionId]);
+  if (row && !row.title) {
+    const title = firstUserMessage.trim().slice(0, 60) || "Новый чат";
+    db.runSync(`UPDATE sessions SET title = ? WHERE id = ?`, [title, sessionId]);
+  }
 }
 
 /** Загружает историю сообщений сессии списывания — та же таблица messages, что и обычный чат. */
@@ -116,6 +156,7 @@ export async function sendCheatModeMessage(params: {
     params.sessionId,
     params.userMessage,
   ]);
+  autoTitleCheatChat(params.sessionId, params.userMessage);
 
   const history = db.getAllSync<{ role: string; content: string }>(
     `SELECT role, content FROM messages WHERE session_id = ? ORDER BY id ASC`,

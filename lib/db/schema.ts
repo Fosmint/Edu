@@ -77,6 +77,7 @@ CREATE TABLE IF NOT EXISTS sessions (
   subject_id TEXT NOT NULL REFERENCES subjects(id),
   topic_id TEXT REFERENCES topics(id),
   type TEXT NOT NULL,               -- 'chat' | 'practice' | 'exam' | 'boss' | 'review' | 'diagnostic'
+  title TEXT,                       -- название чата (для type='chat' с несколькими чатами по теме); NULL = "Новый чат"
   started_at TEXT NOT NULL DEFAULT (datetime('now')),
   ended_at TEXT,
   score REAL,                       -- 0..1, для practice/exam/boss
@@ -122,6 +123,18 @@ CREATE TABLE IF NOT EXISTS daily_tasks (
   duration_min INTEGER NOT NULL DEFAULT 10,
   completed INTEGER NOT NULL DEFAULT 0,
   UNIQUE(date, subject_id, topic_id)
+);
+
+-- Планы подготовки к контрольным
+CREATE TABLE IF NOT EXISTS exam_preps (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  subject_id TEXT NOT NULL REFERENCES subjects(id),
+  exam_title TEXT NOT NULL,
+  exam_date TEXT,
+  steps_json TEXT NOT NULL,
+  completed_steps TEXT NOT NULL DEFAULT '[]',
+  is_completed INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_topics_subject ON topics(subject_id);

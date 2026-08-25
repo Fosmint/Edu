@@ -72,7 +72,7 @@ export default function SubjectScreen() {
             <Card
               key={t.id}
               style={[styles.topicCard, locked && styles.topicCardLocked] as any}
-              onPress={locked ? undefined : () => router.push(`/topic/${t.id}/chat`)}
+              onPress={locked ? undefined : () => router.push(`/topic/${t.id}/chats`)}
             >
               <View style={styles.topicRow}>
                 <Icon

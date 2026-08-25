@@ -54,11 +54,15 @@ export default function RootLayout() {
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="subject/[id]" options={{ title: "" }} />
-        <Stack.Screen name="topic/[id]/chat" options={{ title: "Чат с преподавателем" }} />
+        <Stack.Screen name="topic/[id]/chats" options={{ title: "Чаты" }} />
+        <Stack.Screen name="topic/[id]/chat/[sessionId]" options={{ title: "Чат с преподавателем" }} />
         <Stack.Screen name="topic/[id]/practice" options={{ title: "Практика" }} />
         <Stack.Screen name="topic/[id]/boss" options={{ title: "Босс темы" }} />
         <Stack.Screen name="add-topic" options={{ title: "Новая тема", presentation: "modal" }} />
-        <Stack.Screen name="cheat-mode" options={{ title: "Срочно списать" }} />
+        <Stack.Screen name="exam-prep" options={{ title: "Контрольная скоро", presentation: "modal" }} />
+        <Stack.Screen name="exam-prep-plan" options={{ title: "План подготовки" }} />
+        <Stack.Screen name="cheat-mode/index" options={{ title: "Срочно списать" }} />
+        <Stack.Screen name="cheat-mode/[sessionId]" options={{ title: "Срочно списать" }} />
       </Stack>
       <AchievementToast />
     </GestureHandlerRootView>

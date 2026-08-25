@@ -1,10 +1,13 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { View, Text, ScrollView, StyleSheet, Pressable } from "react-native";
 import { useRouter } from "expo-router";
+import { useFocusEffect } from "expo-router";
+import { useCallback } from "react";
 import { useProfileStore } from "../../stores/useProfileStore";
 import { useSubjectsStore } from "../../stores/useSubjectsStore";
 import { xpForLevel } from "../../lib/db/profileRepo";
 import { getTopicsDueForReview } from "../../lib/srs/sm2";
+import { getActiveExamPreps, ExamPrep } from "../../lib/db/examPrepRepo";
 import { Card } from "../../components/Card";
 import { ProgressBar } from "../../components/ProgressBar";
 import { colors, spacing, radius } from "../../components/theme";
@@ -16,10 +19,17 @@ export default function HomeScreen() {
   const profile = useProfileStore((s) => s.profile);
   const subjects = useSubjectsStore((s) => s.subjects);
   const refreshSubjects = useSubjectsStore((s) => s.refreshSubjects);
+  const [activePreps, setActivePreps] = useState<ExamPrep[]>([]);
 
   useEffect(() => {
     refreshSubjects();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      setActivePreps(getActiveExamPreps());
+    }, [])
+  );
 
   if (!profile) return null;
 
@@ -59,6 +69,46 @@ export default function HomeScreen() {
         <Text style={styles.addTopicButtonText}>Что сейчас проходим в школе?</Text>
       </Pressable>
 
+      <Pressable style={styles.examPrepButton} onPress={() => router.push("/exam-prep")}>
+        <Icon name="target" size={17} color={colors.textPrimary} />
+        <Text style={styles.examPrepButtonText}>Контрольная скоро 📝</Text>
+      </Pressable>
+
+      {activePreps.map((prep) => {
+        const completedCount = prep.completed_steps.length;
+        const totalSteps = prep.steps.length;
+        const remainingMin = prep.steps
+          .filter((s) => !prep.completed_steps.includes(s.order))
+          .reduce((sum, s) => sum + s.estimated_minutes, 0);
+        return (
+          <Card
+            key={prep.id}
+            style={styles.examPrepCard}
+            onPress={() => router.push(`/exam-prep-plan?id=${prep.id}`)}
+          >
+            <View style={styles.sectionTitleRow}>
+              <Icon name="target" size={16} color={colors.warning} />
+              <Text style={styles.examPrepCardTitle}>{prep.exam_title}</Text>
+            </View>
+            <View style={styles.examPrepProgressRow}>
+              <View style={styles.examPrepProgressBarBg}>
+                <View
+                  style={[
+                    styles.examPrepProgressBarFill,
+                    { width: `${(completedCount / totalSteps) * 100}%` },
+                  ]}
+                />
+              </View>
+              <Text style={styles.examPrepProgressText}>
+                {completedCount}/{totalSteps}
+              </Text>
+            </View>
+            <Text style={styles.examPrepRemaining}>
+              {remainingMin > 0 ? `Осталось ~${remainingMin} мин` : "Все шаги выполнены!"}
+            </Text>
+          </Card>
+        );
+      })}
       {dueForReview.length > 0 && (
         <Card style={styles.reviewCard}>
           <View style={styles.sectionTitleRow}>
@@ -176,6 +226,35 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   addTopicButtonText: { color: colors.background, fontSize: 15, fontWeight: "700" },
+  examPrepButton: {
+    backgroundColor: colors.surfaceElevated,
+    borderRadius: radius.md,
+    paddingVertical: spacing.md,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.xs,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  examPrepButtonText: { color: colors.textPrimary, fontSize: 15, fontWeight: "700" },
+  examPrepCard: { gap: spacing.xs, borderColor: colors.warning, borderWidth: 1 },
+  examPrepCardTitle: { color: colors.textPrimary, fontSize: 15, fontWeight: "600" },
+  examPrepProgressRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
+  examPrepProgressBarBg: {
+    flex: 1,
+    height: 6,
+    backgroundColor: colors.surfaceElevated,
+    borderRadius: radius.full,
+    overflow: "hidden",
+  },
+  examPrepProgressBarFill: {
+    height: 6,
+    backgroundColor: colors.success,
+    borderRadius: radius.full,
+  },
+  examPrepProgressText: { color: colors.textSecondary, fontSize: 12, fontWeight: "600" },
+  examPrepRemaining: { color: colors.textMuted, fontSize: 12 },
   sectionTitle: { color: colors.textPrimary, fontSize: 16, fontWeight: "700", marginTop: spacing.sm },
   recommendationText: { color: colors.textSecondary, marginTop: spacing.xs, lineHeight: 20 },
   recommendationButton: {

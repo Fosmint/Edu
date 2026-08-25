@@ -24,6 +24,8 @@ export const useProfileStore = create<ProfileState>((set) => ({
 
   gainXp: (amount: number) => {
     const { profile, leveledUp } = addXpDb(amount);
+    // checkAndUnlockAchievements вызывается ПОСЛЕ addXpDb, а не внутри,
+    // чтобы не создавать вложенные транзакции (addXpDb уже использует withTransactionSync)
     const newAchievements = checkAndUnlockAchievements();
     set({ profile, levelUpPending: leveledUp, newlyUnlockedAchievements: newAchievements });
   },
