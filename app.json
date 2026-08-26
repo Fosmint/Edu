@@ -25,6 +25,7 @@
       "expo-router",
       "expo-sqlite",
       "expo-secure-store",
+      "./plugins/withGigaChatNetworkConfig.js",
       [
         "expo-build-properties",
         {

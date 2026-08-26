@@ -30,6 +30,7 @@ export default function TopicPracticeScreen() {
   const [loadingSet, setLoadingSet] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
+  const [streak, setStreak] = useState(0);
 
   useEffect(() => {
     if (!id) return;
@@ -108,6 +109,33 @@ export default function TopicPracticeScreen() {
           );
           recalculateSubjectProgress(db, topic.subject_id);
         }
+
+        // Адаптивная сложность: серия из 3 верных ответов подряд поднимает сложность
+        // на тир выше (потолок 4), серия из 2 неверных подряд — опускает на тир ниже
+        // (пол 1). Это то, что реально подстраивает будущие практики под ученика,
+        // а не просто читает статичное значение, заданное при создании темы.
+        setStreak((prevStreak) => {
+          const newStreak = check.is_correct ? prevStreak + 1 : prevStreak - 1;
+          const currentTier = topic.current_difficulty_tier;
+
+          if (newStreak >= 3 && currentTier < 4) {
+            db.runSync(`UPDATE topic_progress SET current_difficulty_tier = ? WHERE topic_id = ?`, [
+              currentTier + 1,
+              topic.id,
+            ]);
+            setTopic((t) => (t ? { ...t, current_difficulty_tier: currentTier + 1 } : t));
+            return 0;
+          }
+          if (newStreak <= -2 && currentTier > 1) {
+            db.runSync(`UPDATE topic_progress SET current_difficulty_tier = ? WHERE topic_id = ?`, [
+              currentTier - 1,
+              topic.id,
+            ]);
+            setTopic((t) => (t ? { ...t, current_difficulty_tier: currentTier - 1 } : t));
+            return 0;
+          }
+          return newStreak;
+        });
 
         if (check.is_correct) {
           setCorrectCount((c) => c + 1);
