@@ -5,6 +5,8 @@ import { useSubjectsStore } from "../../stores/useSubjectsStore";
 import { Card } from "../../components/Card";
 import { ProgressBar } from "../../components/ProgressBar";
 import { colors, spacing } from "../../components/theme";
+import { Icon } from "../../components/icons/Icon";
+import { resolveIconName } from "../../components/icons/iconMap";
 
 export default function SubjectsScreen() {
   const router = useRouter();
@@ -21,7 +23,7 @@ export default function SubjectsScreen() {
       {subjects.map((s) => (
         <Card key={s.id} onPress={() => router.push(`/subject/${s.id}`)} style={styles.card}>
           <View style={styles.row}>
-            <Text style={styles.icon}>{s.icon}</Text>
+            <Icon name={resolveIconName(s.icon)} size={22} color={colors.textPrimary} />
             <View style={styles.info}>
               <Text style={styles.name}>{s.name}</Text>
               <ProgressBar percent={s.overall_progress_pct} />

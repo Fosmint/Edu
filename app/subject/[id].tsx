@@ -76,7 +76,7 @@ export default function SubjectScreen() {
             >
               <View style={styles.topicRow}>
                 <Icon
-                  name={STATUS_ICONS[t.status]}
+                  name={STATUS_ICONS[t.status] ?? "circle-outline"}
                   size={20}
                   color={t.status === "mastered" ? colors.success : colors.textPrimary}
                 />
@@ -84,7 +84,7 @@ export default function SubjectScreen() {
                   <Text style={[styles.topicName, locked && styles.textMuted]}>{t.name}</Text>
                   {!locked && (
                     <View style={styles.topicMetaRow}>
-                      <Icon name={TIER_ICONS[t.current_difficulty_tier]} size={13} color={colors.textSecondary} />
+                      <Icon name={TIER_ICONS[t.current_difficulty_tier] ?? "circle-outline"} size={13} color={colors.textSecondary} />
                       <Text style={styles.topicMeta}>{Math.round(t.mastery_pct)}% освоено</Text>
                     </View>
                   )}

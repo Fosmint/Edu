@@ -38,11 +38,6 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x android/gradlew
 
-      - name: Force embedded JS bundle in debug build (so it runs without Metro/laptop)
-        run: |
-          sed -i '/project.ext.react = \[/a\    bundleInDebug: true,' android/app/build.gradle || true
-          grep -q "bundleInDebug" android/app/build.gradle && echo "OK: bundleInDebug patched" || echo "WARN: pattern not found, check build.gradle manually"
-
       - name: Build release APK with Gradle directly (JS bundle embedded, no EAS credits used)
         working-directory: android
         run: ./gradlew assembleRelease --no-daemon
@@ -59,24 +54,6 @@ jobs:
         with:
           name: edumentor-release-apk
           path: ${{ steps.locate_apk.outputs.apk_path }}
-          retention-days: 30
-
-      - name: Build DEBUG APK too (shows real JS error on screen when it crashes)
-        working-directory: android
-        run: ./gradlew assembleDebug --no-daemon
-
-      - name: Locate debug APK
-        id: locate_debug_apk
-        run: |
-          APK_PATH=$(find android/app/build/outputs/apk/debug -name "*.apk" | head -n 1)
-          echo "Найден debug APK: $APK_PATH"
-          echo "apk_path=$APK_PATH" >> "$GITHUB_OUTPUT"
-
-      - name: Upload debug APK as build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: edumentor-debug-apk
-          path: ${{ steps.locate_debug_apk.outputs.apk_path }}
           retention-days: 30
 
       - name: Print build info

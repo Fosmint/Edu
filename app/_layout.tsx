@@ -1,13 +1,67 @@
 import { useEffect, useState } from "react";
-import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
+import { View, Text, ActivityIndicator, StyleSheet, ScrollView } from "react-native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { initDatabase } from "../lib/db/client";
 import { useProfileStore } from "../stores/useProfileStore";
 import { AchievementToast } from "../components/AchievementToast";
+import { CrashScreen } from "../components/CrashScreen";
+
+// Глобальный перехват необработанных JS-ошибок (вне React-рендера, например
+// в async-коде, обработчиках onPress, промисах) — работает даже в релизной
+// сборке, где стандартный red box отключён и приложение иначе просто тихо падает.
+declare const ErrorUtils: {
+  setGlobalHandler: (handler: (error: Error, isFatal?: boolean) => void) => void;
+  getGlobalHandler: () => (error: Error, isFatal?: boolean) => void;
+};
+
+let globalCrashInfo: { error: Error; isFatal?: boolean } | null = null;
+let globalCrashListeners: Array<() => void> = [];
+
+if (typeof ErrorUtils !== "undefined") {
+  const originalHandler = ErrorUtils.getGlobalHandler();
+  ErrorUtils.setGlobalHandler((error, isFatal) => {
+    globalCrashInfo = { error, isFatal };
+    globalCrashListeners.forEach((l) => l());
+    // не вызываем originalHandler, чтобы избежать стандартного немедленного
+    // закрытия/красного экрана поверх нашего — мы сами показываем ошибку ниже
+    console.error("Global JS error caught:", error, "isFatal:", isFatal);
+  });
+}
 
 export default function RootLayout() {
+  const [globalCrash, setGlobalCrash] = useState<{ error: Error; isFatal?: boolean } | null>(null);
+
+  useEffect(() => {
+    if (globalCrashInfo) setGlobalCrash(globalCrashInfo);
+    const listener = () => setGlobalCrash(globalCrashInfo);
+    globalCrashListeners.push(listener);
+    return () => {
+      globalCrashListeners = globalCrashListeners.filter((l) => l !== listener);
+    };
+  }, []);
+
+  if (globalCrash) {
+    return (
+      <ScrollView style={styles.centerScreen} contentContainerStyle={{ padding: 20, paddingTop: 60 }}>
+        <Text style={styles.errorTitle}>Приложение упало (global JS error)</Text>
+        <Text style={styles.errorText}>{globalCrash.error.message}</Text>
+        {globalCrash.error.stack && (
+          <Text style={[styles.errorText, { fontSize: 11, marginTop: 12 }]}>{globalCrash.error.stack}</Text>
+        )}
+      </ScrollView>
+    );
+  }
+
+  return (
+    <CrashScreen>
+      <RootLayoutInner />
+    </CrashScreen>
+  );
+}
+
+function RootLayoutInner() {
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const refreshProfile = useProfileStore((s) => s.refresh);
