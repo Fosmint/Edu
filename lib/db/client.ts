@@ -1,0 +1,175 @@
+import * as SQLite from "expo-sqlite";
+import { CREATE_TABLES_SQL, SEED_PROFILE_SQL } from "./schema";
+import { SUBJECTS, TOPICS } from "./seed";
+
+const DB_NAME = "edumentor.db";
+
+let dbInstance: SQLite.SQLiteDatabase | null = null;
+
+/**
+ * Возвращает singleton-соединение с БД. Открывается один раз за жизнь приложения.
+ */
+export function getDb(): SQLite.SQLiteDatabase {
+  if (!dbInstance) {
+    dbInstance = SQLite.openDatabaseSync(DB_NAME);
+  }
+  return dbInstance;
+}
+
+/**
+ * Полная инициализация: создание таблиц + первичное наполнение (если пусто).
+ * Вызывается один раз при старте приложения (см. app/_layout.tsx).
+ */
+export async function initDatabase(): Promise<void> {
+  const db = getDb();
+
+  db.execSync(CREATE_TABLES_SQL);
+  db.execSync(SEED_PROFILE_SQL);
+  runMigrations(db);
+
+  const subjectCountRow = db.getFirstSync<{ count: number }>(
+    "SELECT COUNT(*) as count FROM subjects"
+  );
+
+  if (!subjectCountRow || subjectCountRow.count === 0) {
+    seedSubjectsAndTopics(db);
+  }
+
+  // Служебный "предмет"-заглушка для режима "Срочно списать" — не тема обучения,
+  // а просто нужен как FK для sessions.subject_id (там NOT NULL REFERENCES subjects).
+  // INSERT OR IGNORE, а не привязка к "первому запуску" — иначе у пользователей,
+  // уже имеющих БД, эта запись никогда бы не появилась.
+  db.runSync(
+    `INSERT OR IGNORE INTO subjects (id, name, icon, sort_order, is_hidden) VALUES ('cheat_mode', 'Срочно списать', 'sos', 999, 1)`
+  );
+}
+
+/**
+ * Лёгкие миграции для полей, добавленных после того как приложение уже могло быть
+ * установлено у пользователя с более старой схемой. CREATE_TABLES_SQL использует
+ * "IF NOT EXISTS" и потому не добавляет новые колонки в уже существующие таблицы —
+ * это компенсируется здесь через ALTER TABLE с проверкой на существование колонки.
+ */
+function runMigrations(db: SQLite.SQLiteDatabase): void {
+  addColumnIfMissing(db, "mistakes", "mistake_type_ru", "TEXT");
+  addColumnIfMissing(db, "subjects", "is_hidden", "INTEGER NOT NULL DEFAULT 0");
+  addColumnIfMissing(db, "sessions", "title", "TEXT");
+  migrateEmojiIconsToKeys(db);
+}
+
+/**
+ * У пользователей, установивших приложение до перехода на SVG-иконки, в колонках
+ * subjects.icon и achievements.icon уже могут храниться emoji-строки (например "🧮").
+ * Переводим их на новые семантические ключи, которые понимает components/icons/iconMap.ts,
+ * чтобы у уже существующих пользователей интерфейс тоже перешёл на новые иконки
+ * без сброса прогресса и без дублирования записей.
+ */
+function migrateEmojiIconsToKeys(db: SQLite.SQLiteDatabase): void {
+  const subjectIconMigration: Record<string, string> = {
+    "🧮": "math",
+    "🇷🇺": "russian",
+    "🇬🇧": "english",
+    "⚗️": "chemistry",
+    "⚛️": "physics",
+    "🆘": "sos",
+  };
+  const achievementIconMigration: Record<string, string> = {
+    "🏁": "flag",
+    "🏆": "trophy",
+    "📚": "books",
+    "🧮": "calculator",
+    "⚡": "bolt",
+    "🔥": "flame",
+    "⚔️": "sword",
+    "💀": "skull",
+    "🎯": "target",
+    "✏️": "pencil",
+    "⭐": "star",
+    "🌟": "sparkle-star",
+  };
+
+  const subjectsTableExists = db.getFirstSync<{ name: string }>(
+    `SELECT name FROM sqlite_master WHERE type='table' AND name='subjects'`
+  );
+  if (subjectsTableExists) {
+    for (const [emoji, key] of Object.entries(subjectIconMigration)) {
+      db.runSync(`UPDATE subjects SET icon = ? WHERE icon = ?`, [key, emoji]);
+    }
+  }
+
+  const achievementsTableExists = db.getFirstSync<{ name: string }>(
+    `SELECT name FROM sqlite_master WHERE type='table' AND name='achievements'`
+  );
+  if (achievementsTableExists) {
+    for (const [emoji, key] of Object.entries(achievementIconMigration)) {
+      db.runSync(`UPDATE achievements SET icon = ? WHERE icon = ?`, [key, emoji]);
+    }
+  }
+}
+
+function addColumnIfMissing(
+  db: SQLite.SQLiteDatabase,
+  table: string,
+  column: string,
+  type: string
+): void {
+  const columns = db.getAllSync<{ name: string }>(`PRAGMA table_info(${table})`);
+  const exists = columns.some((c) => c.name === column);
+  if (!exists) {
+    db.execSync(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`);
+  }
+}
+
+function seedSubjectsAndTopics(db: SQLite.SQLiteDatabase): void {
+  db.withTransactionSync(() => {
+    for (const s of SUBJECTS) {
+      db.runSync(
+        `INSERT INTO subjects (id, name, icon, sort_order) VALUES (?, ?, ?, ?)`,
+        [s.id, s.name, s.icon, s.sort_order]
+      );
+    }
+
+    for (const t of TOPICS) {
+      db.runSync(
+        `INSERT INTO topics (id, subject_id, parent_id, name, description, sort_order, min_difficulty_tier, is_unlocked, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          t.id,
+          t.subject_id,
+          t.parent_id,
+          t.name,
+          t.description,
+          t.sort_order,
+          t.min_difficulty_tier,
+          t.is_unlocked,
+          t.is_unlocked ? "available" : "locked",
+        ]
+      );
+
+      // Создаём пустую строку прогресса для каждой темы сразу
+      db.runSync(`INSERT INTO topic_progress (topic_id) VALUES (?)`, [t.id]);
+    }
+  });
+}
+
+/**
+ * Утилита для дев-режима: полностью сбросить БД (удалить и пересоздать).
+ * НЕ вызывать в проде без явного подтверждения пользователя.
+ */
+export async function resetDatabase(): Promise<void> {
+  const db = getDb();
+  db.execSync(`
+    DROP TABLE IF EXISTS exam_preps;
+    DROP TABLE IF EXISTS daily_tasks;
+    DROP TABLE IF EXISTS exams;
+    DROP TABLE IF EXISTS achievements;
+    DROP TABLE IF EXISTS messages;
+    DROP TABLE IF EXISTS sessions;
+    DROP TABLE IF EXISTS mistakes;
+    DROP TABLE IF EXISTS topic_progress;
+    DROP TABLE IF EXISTS topics;
+    DROP TABLE IF EXISTS subjects;
+    DROP TABLE IF EXISTS profile;
+  `);
+  await initDatabase();
+}

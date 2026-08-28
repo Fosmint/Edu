@@ -1,0 +1,60 @@
+name: Build Android APK (local, no EAS credits)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Prebuild native Android project
+        run: npx expo prebuild --platform android --clean
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x android/gradlew
+
+      - name: Build release APK with Gradle directly (JS bundle embedded, no EAS credits used)
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Locate release APK
+        id: locate_apk
+        run: |
+          APK_PATH=$(find android/app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          echo "Найден APK: $APK_PATH"
+          echo "apk_path=$APK_PATH" >> "$GITHUB_OUTPUT"
+
+      - name: Upload release APK as build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: edumentor-release-apk
+          path: ${{ steps.locate_apk.outputs.apk_path }}
+          retention-days: 30
+
+      - name: Print build info
+        run: echo "Готово! Скачай APK во вкладке Actions -> этот запуск -> раздел Artifacts внизу страницы."
